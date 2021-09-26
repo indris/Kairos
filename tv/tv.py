@@ -237,7 +237,8 @@ css_selectors = dict(
     indicator_dialog_select_options='#overlap-manager-root div[class^="dropdown"] div[class^="item"]',
     btn_indicator_dialog_ok='#overlap-manager-root button[name="submit"]',
     active_chart_asset='div.chart-container.active div.pane-legend-line.main div.pane-legend-title__description > div',
-    active_chart_interval='div[id="header-toolbar-intervals"] div[class*="isActive"] > div > div',
+    # active_chart_interval='div[id="header-toolbar-intervals"] div[class*="isActive"] > div > div',
+    active_chart_interval='div[id="header-toolbar-intervals"] > div > div > div',
     chart_container='div.chart-container div.chart-gui-wrapper canvas:nth-child(2)',
     # User Menu
     btn_user_menu='button.tv-header__user-menu-button--logged',
@@ -2691,7 +2692,7 @@ def create_browser(run_in_background):
 
     try:
         # noinspection PyUnboundLocalVariable
-        log_path = r"--log-path=.\chromedriver_{}.log".format(int(WEBDRIVER_INSTANCE))
+        log_path = r"--log-path=./chromedriver_{}.log".format(int(WEBDRIVER_INSTANCE))
 
         # Create webdriver.remote
         # Note, we cannot serialize webdriver.Chrome
@@ -2702,7 +2703,8 @@ def create_browser(run_in_background):
                 executable_path=chromedriver_file,
                 options=options,
                 desired_capabilities=capabilities,
-                service_args=["--verbose", log_path])
+                service_args=["--verbose", log_path],
+            )
 
         check_driver(browser)
 
@@ -3397,7 +3399,7 @@ def test_indicator_symbol(browser, inputs, symbol, indicator, data, number_of_ch
                     wait_and_click(browser, css_selectors['btn_indicator_dialog_ok'])
 
                 elem_interval = find_element(browser, css_selectors['active_chart_interval'])
-                interval = repr(elem_interval.get_attribute('innerHTML')).replace(', ', '')
+                interval = repr(elem_interval.get_attribute('innerHTML')).replace('\'', '')
                 intervals.append(interval)
 
                 if not (interval in interval_totals):
@@ -3586,7 +3588,7 @@ def back_test_strategy(browser, inputs, properties, symbols, strategy_config, nu
     global tv_start
 
     raw = []
-    input_locations = dict()
+    input_locations = strategy_config['input_locations'] if 'input_locations' in strategy_config else dict()
     property_locations = dict()
     interval_averages = dict()
     symbol_averages = dict()
@@ -3782,7 +3784,7 @@ def back_test_strategy_symbol(browser, inputs, properties, symbol, strategy_conf
                     # open the strategy dialog and set the input & property values
                     format_strategy(browser, inputs, properties, input_locations, property_locations)
                 elem_interval = find_element(browser, css_selectors['active_chart_interval'])
-                interval = repr(elem_interval.get_attribute('innerHTML')).replace(', ', '')
+                interval = repr(elem_interval.get_attribute('innerHTML')).replace('\'', '')
                 log.info(interval)
                 intervals.append(interval)
 
@@ -3814,7 +3816,7 @@ def back_test_strategy_symbol(browser, inputs, properties, symbol, strategy_conf
                     raise value
 
                 # check if the total closed trades is over the threshold
-                if key == 'performance_summary_total_closed_trades' and config.has_option('backtesting', 'threshold') and config.getint('backtesting', 'threshold') > value:
+                if key == 'performance_summary_total_closed_trades' and config.has_option('backtesting', 'threshold') and config.getint('backtesting', 'threshold') > int(float(value)):
                     log.info("{}: {} data has been excluded due to the number of closed trades ({}) not reaching the threshold ({})".format(symbol, interval, value, config.getint('backtesting', 'threshold')))
                     over_the_threshold = False
                     values[key] = value
